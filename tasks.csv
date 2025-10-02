@@ -1,0 +1,51 @@
+id|taskName|description|completed
+1|Buy groceries|Pick up milk, eggs, bread, and vegetables from the supermarket|True
+2|Finish project report|Compile findings and finalize the Q3 performance report|False
+3|Call mom|Catch up with mom over the phone about weekend plans|True
+4|Pay bills|Pay electricity and internet bills online before the due date|False
+5|Clean the house|Vaccum, dust shelves, and mop the living room floor|False
+6|Read a book|Read at least two chapters of current novel|False
+7|Go for a run|Run 3 miles in the neighborhood park|True
+8|Prepare dinner|Cook pasta with salad for family dinner|True
+9|Fix the bike|Patch up the flat tire and oil the chain|False
+10|Schedule doctor appointment|Book annual physical check-up with Dr. Smith|True
+11|Email client|Respond to pending client queries about the proposal|False
+12|Plan weekend trip|Research hotels and activities for the mountain getaway|True
+13|Water the plants|Water indoor succulents and outdoor garden plants|True
+14|Practice guitar|Practice chords and scales for 30 minutes|True
+15|Review pull request|Check teammate’s code changes and provide feedback|True
+16|Submit taxes|Upload W-2 and file federal and state tax returns online|False
+17|Backup files|Backup important project files to external hard drive|True
+18|Organize desk|Clean workspace and arrange stationery neatly|False
+19|Attend team meeting|Join Zoom call for sprint planning at 10 AM|True
+20|Book flight tickets|Purchase round-trip tickets for business conference|True
+21|Update resume|Add recent project achievements to resume draft|False
+22|Meditate|Practice mindfulness meditation for 15 minutes|False
+23|Wash car|Take car to car wash and vacuum the interior|True
+24|Pay rent|Transfer monthly rent to landlord via bank app|True
+25|Research Spring Boot|Read documentation and tutorials on Spring Boot basics|True
+26|Learn Docker|Follow online tutorial to create a sample Docker container|True
+27|Study AWS|Review AWS services for certification prep|True
+28|Write blog post|Draft blog post about productivity tips for developers|True
+29|Take out trash|Empty kitchen and bathroom bins before pickup day|False
+30|Update LinkedIn profile|Add current role and skills to LinkedIn profile|True
+31|Do laundry|Wash and fold clothes, separate whites and colors|False
+32|Cook breakfast|Make scrambled eggs and toast for breakfast|False
+33|Install updates|Install OS and security updates on laptop|False
+34|Check emails|Review unread messages and clear inbox|False
+35|Create budget plan|Plan monthly expenses and update budget spreadsheet|True
+36|Review code|Go through latest commits to ensure code quality|True
+37|Train presentation|Rehearse slides for upcoming client presentation|True
+38|Fix bug|Debug login issue causing failed authentication|True
+39|Order new laptop|Order replacement laptop from company store|True
+40|Refactor module|Clean up data access layer for better readability|False
+41|Deploy app|Deploy new build to staging environment|False
+42|Call bank|Call bank to verify unusual transaction alert|False
+43|Prepare slides|Finish slide deck for quarterly business review|True
+44|Clean fridge|Throw out expired food and wipe fridge shelves|True
+45|Change password|Update password for company VPN|False
+46|Test new feature|Run unit and integration tests on new API feature|True
+47|Buy birthday gift|Buy a gift card for friend’s birthday|True
+48|Book hotel|Reserve hotel room for vacation next month|True
+49|Visit library|Return borrowed books and pick up new ones|True
+50|Walk the dog|Take the dog for a 20-minute evening walk|False
