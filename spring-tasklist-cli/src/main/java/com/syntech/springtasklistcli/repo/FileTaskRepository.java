@@ -28,14 +28,14 @@ public class FileTaskRepository implements TaskRepository {
 
     // Path to the CSV file for storing tasks
     private final Path file;
-    // In-memory map for fast access to tasks
-    private final Map<Long, Task> db = new ConcurrentHashMap<>();
     // Sequence generator for unique task IDs
     private final AtomicLong seq = new AtomicLong(0);
     // Logger for debug output
     private static final Logger log = LoggerFactory.getLogger(FileTaskRepository.class);
     // Pipe Delimiter for CSV
-    private static final String DELIMITER = "\\|";
+    private static final String RAW_DELIM = "|";     // for writing
+    private static final String SPLIT_DELIM = "\\|"; // for reading (regex)
+    private static final String HEADER = "id|taskName|description|completed";
 
     /**
      * Constructor initializes file and loads tasks from file.
@@ -52,55 +52,41 @@ public class FileTaskRepository implements TaskRepository {
         }
         // Initialize sequence based on max ID in file
         List<Task> tasks = load();
-        long maxId = 0;
-        if (!tasks.isEmpty()) {
-            for (Task task : tasks) {
-                if (task.getId() > maxId) {
-                    maxId = (long) task.getId();
-                }
-                setSequence(maxId);
-                try {
-                    this.db.put(task.getId(), task);
-                } catch (Exception e) {
-                    log.error(e.toString());
-                    log.error("Error while trying to initialize db {}, {}", task.getId(), task.getTaskName());
-                    log.error("Closing application");
-                    System.exit(1);
-                }
-                log.debug("Task: {} has been added to list.\n", task);
-            }
-        }
+
+        long maxId = tasks.stream().mapToLong(Task::getId).max().orElse(0L);
+        this.seq.set(maxId + 1);
     }
 
-    private void setSequence(long value) {
-        this.seq.set(value);
+    private String toRow(Task t) {
+        // keep descriptions single-line; you can also escape RAW_DELIM if needed
+        String desc = t.getDescription() == null ? "" : t.getDescription().replace("\r", " ").replace("\n", " ");
+        String name = t.getTaskName() == null ? "" : t.getTaskName().replace("\r", " ").replace("\n", " ");
+        return t.getId() + RAW_DELIM + name + RAW_DELIM + desc + RAW_DELIM + t.isCompleted();
     }
+
     @Override
-    public Task add(Task task) {
+    public void add(Task task) {
         // Assign a unique ID to the task
         task.setId(seq.getAndIncrement());
 
-        log.debug("Preparing to add task {}, {}", task.getId(), task.getTaskName());
+        log.debug("Preparing to add task {}, {} to file", task.getId(), task.getTaskName());
 
-        try {
-            this.db.put(task.getId(), task);
-        } catch (Exception e) {
-            log.error(e.toString());
-            log.error("Error while trying to add task {}, {}", task.getId(), task.getTaskName());
-            log.error("Closing application");
-            System.exit(1);
+        try (BufferedWriter w = Files.newBufferedWriter(file, StandardOpenOption.APPEND)) {
+            w.write(toRow(task));
+            w.newLine();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        log.debug("Task: {} has been added to list.\n", task);
-        return task;
     }
 
     @Override
     public Task findById(Long id) {
         // Check if task exists in the map
-        if (this.db.containsKey(id)) {
+        Task task = this.load().stream().filter(t-> t.getId() == id).findFirst().orElse(null);
+        if (task != null) {
             log.debug("Task: {} has been found.\n", id);
-            log.debug("Returning task {}.", db.get(id));
-            return db.get(id);
+            log.debug("Returning task {}.", task.getId());
+            return task;
         }
         log.debug("Task: {} has NOT been found.\n", id);
         return null;
@@ -109,63 +95,78 @@ public class FileTaskRepository implements TaskRepository {
     @Override
     public List<Task> findAll() {
         // Return all tasks as a list
-        if (this.db.isEmpty()) {
+        List<Task> tasks = this.load();
+        if (tasks.isEmpty()) {
             log.debug("Nothing in list.\n");
             return new ArrayList<Task>();
         }
-        return new ArrayList<Task>(db.values());
+        return tasks;
     }
 
     @Override
     public void deleteById(Long id) {
         // Remove task by ID if it exists
-        if (this.db.containsKey(id)) {
-            this.db.remove(id);
+        List<Task> tasks = this.load();
+        if (!tasks.isEmpty()) {
+            tasks.removeIf(t -> t.getId() == id);
             log.debug("Task: {} has been deleted.\n", id);
+            log.debug("Writing updated tasks to file.\n");
+            writeAll(tasks);
+            log.debug("Writing completed.\n");
         } else {
             log.debug("Task: {} has NOT been deleted.\n", id);
+        }
+    }
+
+    private void writeAll(List<Task> tasks) {
+        try (BufferedWriter w = Files.newBufferedWriter(file, StandardOpenOption.TRUNCATE_EXISTING)) {
+            w.write(HEADER);
+            w.newLine();
+            for (Task t : tasks) {
+                w.write(toRow(t));
+                w.newLine();
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
     @Override
     public void deleteAll() {
         // Clear all tasks from the map
-        if (this.db.isEmpty()) {
+        List<Task> tasks = this.load();
+        if (tasks.isEmpty()) {
             log.debug("List is empty unable to clear.\n");
             return;
         }
-        this.db.clear();
+
+        // Clear the file by writing only the header
+        writeAll(new ArrayList<>());
         log.debug("Cleared all entries in list.\n");
     }
 
     @Override
     public void update(Long id, String taskName, String description, Boolean completed) {
-        // Get the original task
-        Task task = this.db.get(id);
-
-        if (this.db.containsKey(id)) {
-            // Update task fields and timestamp
-            task.setUpdatedTime();
-            task.setTaskName(taskName);
-            task.setDescription(description);
-            task.setCompleted(completed);
-
-            this.db.put(task.getId(), task);
-        } else {
-            log.debug("Task {} does not exist.\n", task.getId());
-            log.debug("Skipping update...\n");
-        }
+        // Load current tasks
+        List<Task> tasks = this.load();
+        // Find the task and update it
+        tasks.stream().filter(t -> t.getId() == id).findFirst().ifPresent(t -> {
+            t.setTaskName(taskName);
+            t.setDescription(description);
+            t.setCompleted(completed);
+            writeAll(tasks);
+        });
     }
 
     @Override
     public void complete(Long id) {
-        // Mark task as completed if it exists
-        if  (this.db.containsKey(id)) {
-            Task task = db.get(id);
-            task.setCompleted(true);
-            task.setUpdatedTime();
-            this.db.put(id, task);
-        }
+        // Load current tasks
+        List<Task> tasks = this.load();
+        // Find the task by ID and mark it as completed
+        tasks.stream().filter(t -> t.getId() == id).findFirst().ifPresent(t -> {
+            t.setCompleted(true);
+            writeAll(tasks);
+        });
     }
 
     /**
@@ -179,23 +180,24 @@ public class FileTaskRepository implements TaskRepository {
             if (Files.size(file) == 0) return List.of();
 
             List<String> lines = Files.readAllLines(file);
-            List<Task> tasks;
+            List<Task> tasks = new ArrayList<>();
 
             log.debug(lines.toString());
 
 
                 for (String l : lines) {
                     try {
-                    if (l.isBlank()) continue;
-                    String[] p = l.split(DELIMITER, 4);
+                        if (l.isBlank()) continue;
+                        String[] p = l.split(SPLIT_DELIM, 4);
 
-                    if (p[0].equals("id")) {
-                        continue;
-                    }
-                    //log.debug("Reading:" + p[0] + " " + p[1] + " " + p[2] + " " + p[3]);
-
-                    Task t = new Task(Long.parseLong(p[0]), p[1], p[2], Boolean.parseBoolean(p[3]));
-                    this.db.put(t.getId(), t);
+                        if (p[0].equals("id")) {
+                            continue;
+                        }
+                        Task t = new Task(Long.parseLong(p[0]), p[1], p[2], Boolean.parseBoolean(p[3]));
+                        if (t.getId() >= this.seq.get()) {
+                            this.seq.set(t.getId() + 1);
+                        }
+                        tasks.add(t);
                     } catch (Exception e) {
                         log.error(e.toString());
                         log.error("Error while trying to read file: {}", file.toAbsolutePath());
@@ -207,10 +209,6 @@ public class FileTaskRepository implements TaskRepository {
                         System.exit(1);
                     }
                 }
-                // Only return completed tasks (for some reason)
-                tasks = this.db.values().stream().filter(Task::isCompleted).collect(Collectors.toList());
-
-
             return tasks;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -225,7 +223,7 @@ public class FileTaskRepository implements TaskRepository {
     public String printTasks() {
         String tasksTbl = "";
 
-        if (this.db.isEmpty()) {
+        if (this.load().isEmpty()) {
             tasksTbl = "No tasks found.\n";
             return tasksTbl;
         }
@@ -233,7 +231,7 @@ public class FileTaskRepository implements TaskRepository {
         int idWidth, nameWidth, descWidth, compWidth;
         idWidth = nameWidth = descWidth = 0;
         compWidth = 9;
-        for (Task t : this.db.values()) {
+        for (Task t : this.load().stream().sorted(Comparator.comparingLong(Task::getId)).collect(Collectors.toList())) {
             idWidth = Math.max(idWidth, String.valueOf(t.getId()).length());
             nameWidth = Math.max(nameWidth, t.getTaskName().length());
             descWidth = Math.max(descWidth, t.getDescription().length());
@@ -248,7 +246,7 @@ public class FileTaskRepository implements TaskRepository {
         tasksTbl += line;
         tasksTbl += String.format(format, "ID", "Task Name", "Description", "Completed");
         tasksTbl += line;
-        for (Task t : this.db.values()) {
+        for (Task t : this.load().stream().sorted(Comparator.comparingLong(Task::getId)).collect(Collectors.toList())) {
             if (t.getDescription().length() > 50)
                 tasksTbl += String.format(format, t.getId(), t.getTaskName(), t.getDescription().substring(0,49) + "...", t.isCompleted());
             else

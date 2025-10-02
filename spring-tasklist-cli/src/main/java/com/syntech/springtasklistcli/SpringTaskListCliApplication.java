@@ -93,12 +93,32 @@ public class SpringTaskListCliApplication {
                         pause(in);
                         continue;
                     case "done","d","complete":
-                        try {
-                            long id = Long.parseLong(line.substring(5).trim());
-                            tasks.complete(id);
-                            System.out.println("Completed #" + id);
-                        } catch (NumberFormatException e) {
-                            System.out.println("Usage: done <id>");
+                        while (true) {
+                            System.out.print("Enter task ID to mark as complete: ");
+                            String idStr = in.nextLine().trim();
+                            try {
+                                long id = Long.parseLong(idStr);
+                                tasks.complete(id);
+                                System.out.println("Completed #" + id);
+                                break;
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid ID. Please enter a numeric task ID.");
+                            }
+                        }
+                        pause(in);
+                        continue;
+                    case "remove","r","rm","delete","del":
+                        while (true) {
+                            System.out.print("Enter task ID to remove: ");
+                            String idStr = in.nextLine().trim();
+                            try {
+                                long id = Long.parseLong(idStr);
+                                tasks.delete(id);
+                                System.out.println("Removed #" + id);
+                                break;
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid ID. Please enter a numeric task ID.");
+                            }
                         }
                         pause(in);
                         continue;
@@ -132,6 +152,6 @@ public class SpringTaskListCliApplication {
     }
 
     private static void renderMenu() {
-        System.out.println("[ add | done <id> | list | load | help/? | q ]");
+        System.out.println("[ add | done | list | delete | help | q ]");
     }
 }

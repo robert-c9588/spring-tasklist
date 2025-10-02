@@ -21,12 +21,6 @@ public class Task {
     // Status indicating if the task is completed
     private boolean completed;
 
-    // Timestamp when the task was created
-    private Timestamp createdTime;
-    
-    // Timestamp when the task was last updated
-    private Timestamp updatedTime;
-
     /**
      * Default constructor.
      */
@@ -47,9 +41,6 @@ public class Task {
         this.taskName = taskName;
         this.description = description;
         this.completed = completed;
-
-        this.createdTime = Timestamp.from(Instant.now());
-        this.updatedTime = Timestamp.from(Instant.now());
     }
 
     /**
@@ -65,9 +56,6 @@ public class Task {
         this.taskName = taskName;
         this.description = description;
         this.completed = completed;
-
-        this.createdTime = Timestamp.from(Instant.now());
-        this.updatedTime = Timestamp.from(Instant.now());
     }
 
     // Getter for ID
@@ -88,16 +76,6 @@ public class Task {
     // Getter for completed status
     public boolean isCompleted() {
         return completed;
-    }
-
-    // Getter for created time
-    public Timestamp getCreatedTime() {
-        return createdTime;
-    }
-
-    // Getter for updated time
-    public Timestamp getUpdatedTime() {
-        return updatedTime;
     }
 
     // Alternate getter for completed status
@@ -125,15 +103,6 @@ public class Task {
         this.completed = completed;
     }
 
-    // Setter for created time
-    public void setCreatedTime(Timestamp createdTime) {
-        this.createdTime = createdTime;
-    }
-
-    // Updates the updatedTime to the current timestamp
-    public void setUpdatedTime() {
-        this.updatedTime = Timestamp.from(Instant.now());
-    }
 
     /**
      * Returns a string representation of the Task.
@@ -145,29 +114,18 @@ public class Task {
                 ", taskName='" + taskName + '\'' +
                 ", description='" + description + '\'' +
                 ", completed=" + completed +
-                ", createdTime=" + createdTime +
-                ", updatedTime=" + updatedTime +
                 '}';
     }
 
-    /**
-     * Checks if this Task is equal to another object.
-     * @param o The object to compare with
-     * @return true if equal, false otherwise
-     */
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return id == task.id && completed == task.completed && Objects.equals(taskName, task.taskName) && Objects.equals(description, task.description) && Objects.equals(createdTime, task.createdTime) && Objects.equals(updatedTime, task.updatedTime);
+        return id == task.id && completed == task.completed && Objects.equals(taskName, task.taskName) && Objects.equals(description, task.description);
     }
 
-    /**
-     * Returns the hash code for this Task.
-     */
     @Override
     public int hashCode() {
-        return Objects.hash(id, taskName, description, completed, createdTime, updatedTime);
+        return Objects.hash(id, taskName, description, completed);
     }
-
 }

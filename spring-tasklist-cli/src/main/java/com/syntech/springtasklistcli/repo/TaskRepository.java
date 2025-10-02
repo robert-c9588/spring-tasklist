@@ -14,7 +14,7 @@ public interface TaskRepository {
      * @param task Task to add
      * @return The added Task
      */
-    Task add(Task task);
+    void add(Task task);
 
     /**
      * Find a task by its ID.

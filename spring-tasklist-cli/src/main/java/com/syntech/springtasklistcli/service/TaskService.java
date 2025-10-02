@@ -24,8 +24,8 @@ public class TaskService {
 
     }
 
-    public Task add(String taskName, String description, Boolean completed) {
-        return this.taskRepository.add(new Task(taskName, description, completed));
+    public void add(String taskName, String description, Boolean completed) {
+        this.taskRepository.add(new Task(taskName, description, completed));
     }
 
     public void complete(Long id) {

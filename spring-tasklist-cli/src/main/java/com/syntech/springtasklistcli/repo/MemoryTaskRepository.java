@@ -32,7 +32,7 @@ public class MemoryTaskRepository implements TaskRepository {
 
 
     @Override
-    public Task add(Task task) {
+    public void add(Task task) {
         // Assign a unique ID to the task
 
         task.setId(seq.getAndIncrement());
@@ -44,10 +44,8 @@ public class MemoryTaskRepository implements TaskRepository {
         } catch (Exception e) {
             log.error(e.toString());
             log.error("Error while trying to add task {}, {}", task.getId(), task.getTaskName());
-            return null;
         }
         log.debug("Task: {} has been added to list.\n", task);
-        return task;
     }
 
     @Override
@@ -104,7 +102,6 @@ public class MemoryTaskRepository implements TaskRepository {
 
         if (db.containsKey(id)) {
             // Update task fields and timestamp
-            task.setUpdatedTime();
             task.setTaskName(taskName);
             task.setDescription(description);
             task.setCompleted(completed);
@@ -122,7 +119,6 @@ public class MemoryTaskRepository implements TaskRepository {
         if  (db.containsKey(id)) {
             Task task = db.get(id);
             task.setCompleted(true);
-            task.setUpdatedTime();
             db.put(id, task);
         }
     }
