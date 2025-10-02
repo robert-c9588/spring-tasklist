@@ -15,30 +15,47 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * In-memory implementation of TaskRepository.
  *
- * This class is managed by Spring's dependency injection container.
- * It is only active if the property 'storage.type' is set to 'mem' (or missing).
- * See @Repository and @ConditionalOnProperty annotations.
+ * This repository stores tasks in memory using a thread-safe map and provides
+ * methods to perform CRUD operations. It is active when the property 'storage.type'
+ * is set to 'mem' or is missing.
  */
-@Repository // Enables Spring to inject this as a bean
+@Repository // Marks this class as a Spring-managed bean
 @ConditionalOnProperty(name = "storage.type", havingValue = "mem", matchIfMissing = true)
 public class MemoryTaskRepository implements TaskRepository {
 
-    // Thread-safe map to store tasks in memory
+    // Thread-safe map to store tasks
     private final Map<Long, Task> db = new ConcurrentHashMap<>();
-    // Sequence generator for unique task IDs
-    private final AtomicLong seq = new AtomicLong(0);
-    // Logger for debug output
+    // AtomicLong for generating unique task IDs
+    private final AtomicLong seq = new AtomicLong(1);
+    // Logger for logging debug and error messages
     private static final Logger log = LoggerFactory.getLogger(MemoryTaskRepository.class);
 
+    /**
+     * Constructor for MemoryTaskRepository.
+     *
+     * Initializes the in-memory repository and adds sample tasks for demonstration purposes.
+     */
+    public MemoryTaskRepository() {
+        log.info("Initialized in-memory task repository.");
+        Task task1 = new Task("Sample Task 1", "This is a sample task", false);
+        Task task2 = new Task("Sample Task 2", "This is another sample task", false);
+        Task task3 = new Task("Sample Task 3", "This is another sample task", true);
+        Task task4 = new Task("Sample Task 4", "This is another sample task", false);
+        this.add(task1);
+        this.add(task2);
+        this.add(task3);
+        this.add(task4);
+    }
 
+    /**
+     * Add a new task to the repository.
+     *
+     * @param task The task to add.
+     */
     @Override
     public void add(Task task) {
-        // Assign a unique ID to the task
-
         task.setId(seq.getAndIncrement());
-
         log.debug("Preparing to add task {}, {}", task.getId(), task.getTaskName());
-
         try {
             db.put(task.getId(), task);
         } catch (Exception e) {
@@ -48,33 +65,44 @@ public class MemoryTaskRepository implements TaskRepository {
         log.debug("Task: {} has been added to list.\n", task);
     }
 
+    /**
+     * Find a task by its ID.
+     *
+     * @param id The ID of the task to find.
+     * @return The task if found, or null if not found.
+     */
     @Override
     public Task findById(Long id) {
-        // Check if task exists in the map
         if (db.containsKey(id)) {
             log.debug("Task: {} has been found.\n", id);
             log.debug("Returning task {}.", db.get(id));
-
             return db.get(id);
         }
-
         log.debug("Task: {} has NOT been found.\n", id);
         return null;
     }
 
+    /**
+     * Retrieve all tasks from the repository.
+     *
+     * @return A list of all tasks.
+     */
     @Override
     public List<Task> findAll() {
-        // Return all tasks as a list
         if (db.isEmpty()) {
             log.debug("Nothing in list.\n");
-            return new ArrayList<Task>();
+            return new ArrayList<>();
         }
-        return new ArrayList<Task>(db.values());
+        return new ArrayList<>(db.values());
     }
 
+    /**
+     * Delete a task by its ID.
+     *
+     * @param id The ID of the task to delete.
+     */
     @Override
     public void deleteById(Long id) {
-        // Remove task by ID if it exists
         if (db.containsKey(id)) {
             db.remove(id);
             log.debug("Task: {} has been deleted.\n", id);
@@ -83,57 +111,69 @@ public class MemoryTaskRepository implements TaskRepository {
         }
     }
 
+    /**
+     * Delete all tasks from the repository.
+     */
     @Override
     public void deleteAll() {
-        // Clear all tasks from the map
         if (db.isEmpty()) {
             log.debug("List is empty unable to clear.\n");
             return;
         }
         db.clear();
         log.debug("Cleared all entries in list.\n");
-
     }
 
+    /**
+     * Update an existing task.
+     *
+     * @param id          The ID of the task to update.
+     * @param taskName    The new name of the task.
+     * @param description The new description of the task.
+     * @param completed   The new completion status of the task.
+     */
     @Override
     public void update(Long id, String taskName, String description, Boolean completed) {
-        // Get the original task
         Task task = db.get(id);
-
         if (db.containsKey(id)) {
-            // Update task fields and timestamp
             task.setTaskName(taskName);
             task.setDescription(description);
             task.setCompleted(completed);
-
             db.put(task.getId(), task);
         } else {
-            log.debug("Task {} does not exist.\n", task.getId());
+            log.debug("Task {} does not exist.\n", id);
             log.debug("Skipping update...\n");
         }
     }
 
+    /**
+     * Mark a task as completed.
+     *
+     * @param id The ID of the task to mark as completed.
+     */
     @Override
     public void complete(Long id) {
-        // Mark task as completed if it exists
-        if  (db.containsKey(id)) {
+        if (db.containsKey(id)) {
             Task task = db.get(id);
             task.setCompleted(true);
             db.put(id, task);
         }
     }
 
+    /**
+     * Generate a formatted table of tasks for display.
+     *
+     * @return A string representation of the task table.
+     */
     @Override
     public String printTasks() {
         String tasksTbl = "";
-
         if (db.isEmpty()) {
             tasksTbl = "No tasks found.\n";
             return tasksTbl;
         }
 
-        int idWidth, nameWidth, descWidth, compWidth;
-        idWidth = nameWidth = descWidth = compWidth = 0;
+        int idWidth = 2, nameWidth = 9, descWidth = 11, compWidth = 9;
         for (Task t : db.values()) {
             idWidth = Math.max(idWidth, String.valueOf(t.getId()).length());
             nameWidth = Math.max(nameWidth, t.getTaskName().length());
@@ -150,8 +190,6 @@ public class MemoryTaskRepository implements TaskRepository {
             tasksTbl += String.format(format, t.getId(), t.getTaskName(), t.getDescription(), t.isCompleted());
         }
         tasksTbl += line;
-
-
 
         return tasksTbl;
     }
