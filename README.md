@@ -17,9 +17,9 @@ Demonstrates **dependency injection** and **swappable persistence layers**:
 ---
 
 ## Prerequisite
-Install JDK 25
-Maven: 3.8+ (3.9.x recommended).
-Internet access (first build) to fetch dependencies.
+- Install JDK 25
+- Maven: 3.8+ (3.9.x recommended).
+- Internet access (first build) to fetch dependencies.
 
 ---
 
