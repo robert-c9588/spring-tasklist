@@ -13,6 +13,14 @@ Demonstrates **dependency injection** and **swappable persistence layers**:
 - Switch between **in-memory** and **file** storage without changing any code
 - Uses Spring’s `@ConditionalOnProperty` to select the repository implementation
 
+
+---
+
+## Prerequisite
+Install JDK 25
+Maven: 3.8+ (3.9.x recommended).
+Internet access (first build) to fetch dependencies.
+
 ---
 
 ## Build
