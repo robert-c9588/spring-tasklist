@@ -14,7 +14,7 @@ import java.util.Scanner;
 
 /**
  * Main Spring Boot application for the CLI task list.
- * <p>
+ * 
  * This class serves as the entry point for the Spring Boot application
  * and provides a CommandLineRunner bean to implement an interactive CLI
  * for managing tasks.
@@ -36,7 +36,7 @@ public class SpringTaskListCliApplication {
 
     /**
      * CommandLineRunner bean to run the interactive CLI.
-     * <p>
+     * 
      * This method initializes a command-line interface for managing tasks.
      * It provides options to add, view, update, and delete tasks using the TaskService.
      *
@@ -218,7 +218,7 @@ public class SpringTaskListCliApplication {
 
     /**
      * Clear the terminal screen using ANSI escape codes.
-     * <p>
+     * 
      * This method works on most modern terminals (Windows 10+ supports ANSI).
      */
     private static void clearScreen() {
